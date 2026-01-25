@@ -1,3 +1,4 @@
 bin
 obj
 openvr_api.*
+libopenvr_api.*

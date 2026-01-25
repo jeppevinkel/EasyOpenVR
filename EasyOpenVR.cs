@@ -12,15 +12,15 @@ using Valve.VR;
 
 namespace EasyOpenVR;
 
-public sealed class EasyOpenVRSingleton
+public sealed class EasyOpenVr
 {
     /**
      * This is a singleton because in my own experience connecting multiple
      * times to OpenVR from the same application is a terrible idea.
      */
-    private static EasyOpenVRSingleton __instance = null;
+    private static EasyOpenVr __instance = null;
 
-    private EasyOpenVRSingleton()
+    private EasyOpenVr()
     {
     }
 
@@ -29,11 +29,11 @@ public sealed class EasyOpenVRSingleton
     private EVRApplicationType _appType = EVRApplicationType.VRApplication_Background;
     private Action<string> _debugLogAction = null;
 
-    public static EasyOpenVRSingleton Instance
+    public static EasyOpenVr Instance
     {
         get
         {
-            if (__instance == null) __instance = new EasyOpenVRSingleton();
+            if (__instance == null) __instance = new EasyOpenVr();
             return __instance;
         }
     }
@@ -569,6 +569,7 @@ public sealed class EasyOpenVRSingleton
      */
     public EVRInputError LoadActionManifest(string relativePath)
     {
+        // TODO: Validate that file exists
         return OpenVR.Input.SetActionManifestPath(Path.GetFullPath(relativePath));
     }
 
@@ -1279,12 +1280,14 @@ public sealed class EasyOpenVRSingleton
      */
     public bool LoadAppManifest(string relativePath)
     {
+        // TODO: Validate that file exists
         var error = OpenVR.Applications.AddApplicationManifest(Path.GetFullPath(relativePath), false);
         return DebugLog(error);
     }
 
     public bool RemoveAppManifest(string relativePath)
     {
+        // TODO: Validate that file exists
         var error = OpenVR.Applications.RemoveApplicationManifest(Path.GetFullPath(relativePath));
         return DebugLog(error);
     }
@@ -1300,6 +1303,7 @@ public sealed class EasyOpenVRSingleton
     public bool AddApplicationManifest(string relativeManifestPath, string applicationKey,
         bool alsoRegisterAutoLaunch = false)
     {
+        // TODO: Validate that file exists
         if (!OpenVR.Applications.IsApplicationInstalled(applicationKey))
         {
             var manifestError =
