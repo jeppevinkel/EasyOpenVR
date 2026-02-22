@@ -1,3 +1,4 @@
+using EasyOpenVR.Data;
 using Valve.VR;
 
 namespace EasyOpenVR;
@@ -8,15 +9,11 @@ namespace EasyOpenVR;
 public class EasyOpenVrBuilder
 {
     private EasyOpenVr.EasyOpenVrInitParams _initParams;
-
-    public EasyOpenVrBuilder()
-    {
-    }
-
+    
     /**
-     * Build an instance but do not initialize it yet.
+     * Build an instance but do not initialize it.
      */
-    public EasyOpenVr Build()
+    private EasyOpenVr Build()
     {
         return new EasyOpenVr(_initParams);
     }
@@ -27,10 +24,11 @@ public class EasyOpenVrBuilder
     public EasyOpenVr BuildAndInit()
     {
         var vr = Build();
-        vr.Init();
+        vr.InitWorkerThread();
         return vr;
     }
     
+    #region Setters
     /**
      * This will output debug information in the log output as well as the through the listener.
      */
@@ -49,16 +47,46 @@ public class EasyOpenVrBuilder
         _initParams.ApplicationType = appType;
         return this;
     }
-
+    
     /**
-     * Will register the application to launch with OpenVR.
-     * Requires a VRAppManifest to have been registered.
-     * When forced, it will unregister and re-register just to force auto-launch registration.
+     * Will register the application to launch with the runtime.
+     * Requires a VRAppManifest to have been registered, set the path using this builder.
+     * When forced, it will unregister and re-register to ensure auto-launch registration.
      */
-    public EasyOpenVrBuilder SetRegisterAutoLaunch(bool force = false)
+    public EasyOpenVrBuilder SetRegisterAutoLaunch(bool force)
     {
         _initParams.RegisterAutoLaunch = true;
         _initParams.ForceAutoLaunch = force;
         return this;
     }
+    
+    /**
+     * The VR app manifest is required to register an application for auto launch.
+     */
+    public EasyOpenVrBuilder SetVrAppManifestPath(string path)
+    {
+        _initParams.VrAppManifestPath = path.Trim();
+        return this;
+    }
+
+    /**
+     * The action manifest is required for the application to listen to inputs.
+     */
+    public EasyOpenVrBuilder SetActionManifestPath(string path)
+    {
+        _initParams.ActionManifestPath = path.Trim();
+        return this;
+    }
+
+    /**
+     * Set the frequency at which events, input events and transforms are read from the runtime.
+     * This runs an internal worker that automatically fetches data at the defined interval.
+     * This defaults to the same interval as the headset display frequency.
+     */
+    public EasyOpenVrBuilder SetPumpMode(EasyOpenVr.EPumpMode pumpMode)
+    {
+        _initParams.PumpMode = pumpMode;
+        return this;
+    }
+    #endregion
 }

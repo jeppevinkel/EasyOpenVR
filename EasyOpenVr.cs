@@ -1,13 +1,7 @@
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
-using System.Drawing;
-using System.IO;
-using System.Runtime.InteropServices;
-using System.Text;
-using EasyOpenVR.Extensions;
-using EasyOpenVR.Utils;
+using System.Threading;
+using System.Threading.Tasks;
 using Valve.VR;
 
 namespace EasyOpenVR;
@@ -28,10 +22,13 @@ public partial class EasyOpenVr
 
     public record struct EasyOpenVrInitParams(
         EVRApplicationType ApplicationType,
-        string VrAppManifestPath,
+        string? VrAppManifestPath,
+        string? ActionManifestPath,
         bool Debug,
         bool RegisterAutoLaunch,
-        bool ForceAutoLaunch
+        bool ForceAutoLaunch,
+        EPumpMode PumpMode
+        // TODO: Add stuff for input actions? Are they one-time only set-at-start stuff? Figure this out.
     );
 
     public record struct EasyOpenVrResult(
@@ -47,7 +44,17 @@ public partial class EasyOpenVr
         public string ValueType => Value == null ? "" : Value.GetType().Name;
         public string ValueName => Value == null ? "" : Enum.GetName(Value.GetType(), Value) ?? "";
         public bool Success => ErrorOrdinal == 0;
-    };
+    }
+
+    public enum EPumpMode
+    {
+        HmdHz,
+        HalfHmdHz,
+        ThirdHmdHz,
+        QuarterHmdHz,
+        OncePerSecond,
+        OncePerTenSeconds
+    }
     
     public EasyOpenVr(EasyOpenVrInitParams initParams)
     {
@@ -72,35 +79,47 @@ public partial class EasyOpenVr
 
     public delegate void DebugMessageHandler(string message);
     public event DebugMessageHandler? DebugMessage;
+    /**
+     * Used for mostly all debug handling in the library, to allow monitoring of internal events. 
+     */
     private void OnDebugMessage(string message)
     {
         DebugMessage?.Invoke(message);
+    }
+
+    public delegate void StateHandler(bool connected);
+
+    public event StateHandler? State;
+    /**
+     * Will trigger when the running state is changed.
+     */
+    private void OnState(bool connected)
+    {
+        State?.Invoke(connected);
     }
     #endregion
 
     #region init
 
-    private uint _initState = 0;
+    private uint _initState;
 
-    public bool Init()
+    private bool Init()
     {
         var error = EVRInitError.Unknown;
+        var oldState = _initState;
         try
         {
             _initState = OpenVR.InitInternal(ref error, _initParams.ApplicationType);
-
-            if (_initParams.VrAppManifestPath.Trim().Length > 0)
-            {
-                System.LoadAppManifest(_initParams.VrAppManifestPath);
-            }
         }
         catch (Exception e)
         {
             DebugLog(e, "You might be building for 32bit with a 64bit .dll, error");
         }
 
+        var connected = error == EVRInitError.None && _initState > 0; 
+        if(_initState != oldState) OnState(connected);
         DebugLog(error);
-        return error == EVRInitError.None && _initState > 0;
+        return connected;
     }
 
     public bool IsInitialized()
@@ -110,7 +129,61 @@ public partial class EasyOpenVr
 
     #endregion
     
-    #region private_utils
+    #region Worker
+    private Thread? _workerThread;
+
+    internal void InitWorkerThread()
+    {
+        Task.Delay(1000).Wait(); // Allow the API connection to complete 
+        _workerThread = new Thread(Worker);
+        if (!_workerThread.IsAlive) _workerThread.Start();
+    }
+
+    private void Worker()
+    {
+        /* TODO
+         Alright, the concept here. Instead of manually keeping track of indices, new devices, events, let us keep that
+         inside the library. Make the event pump MANDATORY even if at a low Hz, then have live lists of events and
+         transforms and indices that are continuously updated, compared to OpenVR2WS where we have a bunch of lists. 
+         */
+        
+        Thread.CurrentThread.IsBackground = true;
+        var initComplete = false;
+        while (true)
+        {
+            if (_initState > 0)
+            {
+                if (!initComplete)
+                {
+                    initComplete = true;
+                    if (_initParams.VrAppManifestPath is { Length: > 0 })
+                    {
+                        System.LoadAppManifest(_initParams.VrAppManifestPath);
+                        // TODO: Look over the auto-launch stuff in the call to System... it's a mess.
+                    }
+                    if (_initParams.ActionManifestPath is { Length: > 0 })
+                    {
+                        Input.LoadActionManifest(_initParams.ActionManifestPath);
+                    }
+                    Console.WriteLine("OK");
+                }
+                else
+                {
+                }
+            }
+            else
+            {
+                // Idle with attempted init
+                Thread.Sleep(1000);
+                Init();
+            }
+            
+            
+        }
+    }
+    #endregion
+    
+    #region Debug
 
     private void DebugLog(string message)
     {

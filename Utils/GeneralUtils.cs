@@ -18,16 +18,16 @@ public static class GeneralUtils
         return transform;
     }
 
-    public static HmdMatrix34_t GetTransformFromEuler(YPR e)
+    public static HmdMatrix34_t GetTransformFromEuler(Orientation e)
     {
         // Assuming the angles are in radians.
         // Had to switch roll and pitch here to match SteamVR
-        var ch = (float)Math.Cos(e.yaw);
-        var sh = (float)Math.Sin(e.yaw);
-        var ca = (float)Math.Cos(e.roll);
-        var sa = (float)Math.Sin(e.roll);
-        var cb = (float)Math.Cos(e.pitch);
-        var sb = (float)Math.Sin(e.pitch);
+        var ch = (float)Math.Cos(e.Yaw);
+        var sh = (float)Math.Sin(e.Yaw);
+        var ca = (float)Math.Cos(e.Roll);
+        var sa = (float)Math.Sin(e.Roll);
+        var cb = (float)Math.Cos(e.Pitch);
+        var sb = (float)Math.Sin(e.Pitch);
 
         return new HmdMatrix34_t
         {
@@ -79,7 +79,7 @@ public static class GeneralUtils
         };
     }
 
-    public static YPR RotationMatrixToYPR(HmdMatrix34_t m)
+    public static Orientation RotationMatrixToYpr(HmdMatrix34_t m)
     {
         // Had to switch roll and pitch here to match SteamVR
         var q = QuaternionFromMatrix(m);
@@ -88,30 +88,30 @@ public static class GeneralUtils
         {
             case > 0.499:
                 // singularity at north pole
-                return new YPR
+                return new Orientation
                 {
-                    yaw = 2 * Math.Atan2(q.x, q.w), // heading
-                    roll = Math.PI / 2, // attitude
-                    pitch = 0 // bank
+                    Yaw = 2 * Math.Atan2(q.x, q.w), // heading
+                    Roll = Math.PI / 2, // attitude
+                    Pitch = 0 // bank
                 };
             case < -0.499:
                 // singularity at south pole
-                return new YPR
+                return new Orientation
                 {
-                    yaw = -2 * Math.Atan2(q.x, q.w), // headingq
-                    roll = -Math.PI / 2, // attitude
-                    pitch = 0 // bank
+                    Yaw = -2 * Math.Atan2(q.x, q.w), // headingq
+                    Roll = -Math.PI / 2, // attitude
+                    Pitch = 0 // bank
                 };
         }
 
         var sqx = q.x * q.x;
         var sqy = q.y * q.y;
         var sqz = q.z * q.z;
-        return new YPR
+        return new Orientation
         {
-            yaw = Math.Atan2(2 * q.y * q.w - 2 * q.x * q.z, 1 - 2 * sqy - 2 * sqz), // heading
-            roll = Math.Asin(2 * test), // attitude
-            pitch = Math.Atan2(2 * q.x * q.w - 2 * q.y * q.z, 1 - 2 * sqx - 2 * sqz) // bank
+            Yaw = Math.Atan2(2 * q.y * q.w - 2 * q.x * q.z, 1 - 2 * sqy - 2 * sqz), // heading
+            Roll = Math.Asin(2 * test), // attitude
+            Pitch = Math.Atan2(2 * q.x * q.w - 2 * q.y * q.z, 1 - 2 * sqx - 2 * sqz) // bank
         };
     }
 
