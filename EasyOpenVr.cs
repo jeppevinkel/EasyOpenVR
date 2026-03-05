@@ -177,8 +177,6 @@ public partial class EasyOpenVr
                 Thread.Sleep(1000);
                 Init();
             }
-            
-            
         }
     }
     #endregion
@@ -189,9 +187,9 @@ public partial class EasyOpenVr
     {
         if (!_initParams.Debug) return;
         
-        var st = new StackTrace();
-        var sf = st.GetFrame(1);
-        var methodName = sf.GetMethod().Name;
+        var stackTrace = new StackTrace();
+        var stackFrame = stackTrace.GetFrame(1);
+        var methodName = stackFrame?.GetMethod()?.Name;
         var text = $"{methodName}: {message}";
         OnDebugMessage(text);
     }
@@ -203,7 +201,7 @@ public partial class EasyOpenVr
         
         var stackTrace = new StackTrace();
         var stackFrame = stackTrace.GetFrame(1);
-        var methodName = stackFrame.GetMethod().Name;
+        var methodName = stackFrame?.GetMethod()?.Name;
         var text = $"{methodName} {message}: {result.ErrorType}.{result.ErrorName} ({result.ErrorOrdinal})";
         OnDebugMessage(text);
         result.Message = text;
@@ -217,7 +215,7 @@ public partial class EasyOpenVr
         
         var stackTrace = new StackTrace();
         var stackFrame = stackTrace.GetFrame(1);
-        var methodName = stackFrame.GetMethod().Name;
+        var methodName = stackFrame?.GetMethod()?.Name;
         var text =
             $"{methodName} {result.ValueType}.{result.ValueName}: {result.ErrorType}.{result.ErrorName}";
         OnDebugMessage(text);
@@ -229,9 +227,9 @@ public partial class EasyOpenVr
     {
         if (!_initParams.Debug) return new EasyOpenVrResult(null, null);
         
-        var st = new StackTrace();
-        var sf = st.GetFrame(1);
-        var methodName = sf.GetMethod().Name;
+        var stackTrace = new StackTrace();
+        var stackFrame = stackTrace.GetFrame(1);
+        var methodName = stackFrame?.GetMethod()?.Name;
         var text = $"{methodName} {message}: {e.Message}";
         var result = new EasyOpenVrResult(null, null, text);
         OnDebugMessage(text);

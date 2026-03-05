@@ -1,10 +1,15 @@
-using EasyOpenVR.Utils;
+using System;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Software.Boll.EasyUtils;
 
 namespace EasyOpenVR.Data;
 
 public class VrManifestBuilder
 {
     private readonly VrManifest _vrManifest = new();
+    private readonly JsonUtils _jsonUtils = new(new VrManifestJsonSerializerContext());
 
     public VrManifestBuilder(string source = "builtin")
     {
@@ -17,11 +22,29 @@ public class VrManifestBuilder
         return this;
     }
 
-    public string BuildAndSerialize()
+    public JsonResult<VrManifest> BuildAndSerialize()
     {
-        return JsonUtils.SerializeData(_vrManifest);
+        var options = new JsonSerializerOptions
+        {
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping, // To prevent ' to become \u0027
+            IncludeFields = true, // Else the objects become empty due to the use of fields
+            WriteIndented = true, // To make the manifest human-readable, and it matches what is common.
+            PropertyNameCaseInsensitive = true, // Just convenient
+            NumberHandling = JsonNumberHandling.AllowReadingFromString, // For safety
+            PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower, // To ensure compatibility with SteamVR
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, // To simplify the output
+            Converters =
+            {
+                new LowercaseEnumConverter<LaunchTypeEnum>() // To ensure compatible values from enums
+            },
+        };
+        var ctx = new VrManifestJsonSerializerContext(options);
+        var json = new JsonUtils(ctx);
+        return json.Serialize(_vrManifest);
     }
 }
+
+public class LowercaseEnumConverter<T>() : JsonStringEnumConverter<T>(JsonNamingPolicy.SnakeCaseLower) where T : struct, Enum;
 
 public class ApplicationBuilder
 {

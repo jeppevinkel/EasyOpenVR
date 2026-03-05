@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace EasyOpenVR.Data;
 
@@ -32,3 +33,6 @@ public enum LaunchTypeEnum
     Binary,
     Url
 }
+
+[JsonSerializable(typeof(VrManifest))]
+public partial class VrManifestJsonSerializerContext : JsonSerializerContext;
