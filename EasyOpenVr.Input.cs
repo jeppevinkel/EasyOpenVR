@@ -12,25 +12,30 @@ public partial class EasyOpenVr
     public class InputMethods(EasyOpenVr evr)
     {
         /**
-         * From the SteamVR Unity Plugin: https://github.com/ValveSoftware/steamvr_unity_plugin/blob/master/Assets/SteamVR/Input/SteamVR_Input_Sources.cs
-         * Used to get the handle for any specific input source.
+         * Based on the SteamVR Unity Plugin: https://github.com/ValveSoftware/steamvr_unity_plugin/blob/master/Assets/SteamVR/Input/SteamVR_Input_Sources.cs
+         * But we have matched the string values to actual constants in OpenVR where available.
+         * Is used to get the handle for any specific input source.
          */
         public enum InputSource
         {
-            [Description("/unrestricted")] Any,
-            [Description(OpenVR.k_pchPathDevices)] Devices,
-
-            [Description(OpenVR.k_pchPathUserHandLeft)]
-            LeftHand,
-
-            [Description(OpenVR.k_pchPathUserWristLeft)]
-            LeftWrist,
+            #region General
+            [Description("/unrestricted")] 
+            Any,
+            #endregion
+            
+            // Reordered in the order they appear on the body from top to bottom for each side.
+            #region Left
+            [Description(OpenVR.k_pchPathUserShoulderLeft)]
+            LeftShoulder,
 
             [Description(OpenVR.k_pchPathUserElbowLeft)]
             LeftElbow,
+            
+            [Description(OpenVR.k_pchPathUserWristLeft)]
+            LeftWrist,
 
-            [Description(OpenVR.k_pchPathUserShoulderLeft)]
-            LeftShoulder,
+            [Description(OpenVR.k_pchPathUserHandLeft)]
+            LeftHand,
 
             [Description(OpenVR.k_pchPathUserKneeLeft)]
             LeftKnee,
@@ -40,7 +45,8 @@ public partial class EasyOpenVr
 
             [Description(OpenVR.k_pchPathUserFootLeft)]
             LeftFoot,
-
+            #endregion
+            #region Right
             [Description(OpenVR.k_pchPathUserHandRight)]
             RightHand,
 
@@ -61,7 +67,9 @@ public partial class EasyOpenVr
 
             [Description(OpenVR.k_pchPathUserFootRight)]
             RightFoot,
-
+            #endregion
+            
+            #region Center
             [Description(OpenVR.k_pchPathUserHead)]
             Head,
 
@@ -70,7 +78,9 @@ public partial class EasyOpenVr
 
             [Description(OpenVR.k_pchPathUserWaist)]
             Waist,
-
+            #endregion
+            
+            #region Devices
             [Description(OpenVR.k_pchPathUserGamepad)]
             Gamepad,
 
@@ -85,6 +95,7 @@ public partial class EasyOpenVr
 
             [Description(OpenVR.k_pchPathUserTreadmill)]
             Treadmill,
+            #endregion
         }
 
         public enum InputType

@@ -78,15 +78,32 @@ public class EasyOpenVrBuilder
         return this;
     }
 
-    /**
-     * Set the frequency at which events, input events and transforms are read from the runtime.
-     * This runs an internal worker that automatically fetches data at the defined interval.
-     * This defaults to the same interval as the headset display frequency.
-     */
-    public EasyOpenVrBuilder SetPumpMode(EasyOpenVr.EPumpMode pumpMode)
+    /// <summary>
+    /// Set the frequency at which VR events, input events and transforms are read from the runtime
+    /// as well as the rate at which overlays and play space animations are run at.
+    /// </summary>
+    /// <remarks>
+    /// <para>If this is not set the pump is disabled, and these things will have to be triggered in external code.</para>
+    /// The pumpValue is used differently depending on the chosen interval.
+    /// <list type="bullet">
+    /// <item><description>FractionOfHmdHz : Hz = HmdHz / value</description></item>
+    /// <item><description>FixedHz : Hz = value</description></item>
+    /// <item><description>Millisecond : Hz = 1000 / value</description></item>
+    /// </list>
+    /// <b>Note</b>: Running this above headset display frequency can bog down the runtime. 
+    /// </remarks>
+    public EasyOpenVrBuilder SetPumpInterval(EasyOpenVr.EPumpInterval pumpInterval, double pumpValue)
     {
-        _initParams.PumpMode = pumpMode;
+        _initParams.PumpInterval = pumpInterval;
+        _initParams.PumpValue = pumpValue;
         return this;
     }
+    
+    public EasyOpenVrBuilder QuitWithRuntime()
+    {
+        _initParams.QuitWithRuntime = true;
+        return this;
+    }
+    
     #endregion
 }
