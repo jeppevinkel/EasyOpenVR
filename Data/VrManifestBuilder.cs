@@ -24,27 +24,12 @@ public class VrManifestBuilder
 
     public JsonResult<VrManifest> BuildAndSerialize()
     {
-        var options = new JsonSerializerOptions
-        {
-            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping, // To prevent ' to become \u0027
-            IncludeFields = true, // Else the objects become empty due to the use of fields
-            WriteIndented = true, // To make the manifest human-readable, and it matches what is common.
-            PropertyNameCaseInsensitive = true, // Just convenient
-            NumberHandling = JsonNumberHandling.AllowReadingFromString, // For safety
-            PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower, // To ensure compatibility with SteamVR
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, // To simplify the output
-            Converters =
-            {
-                new LowercaseEnumConverter<LaunchTypeEnum>() // To ensure compatible values from enums
-            },
-        };
-        var ctx = new VrManifestJsonSerializerContext(options);
+        var ctx = new VrManifestJsonSerializerContext(JsonSerializerPreset.Options);
         var json = new JsonUtils(ctx);
         return json.Serialize(_vrManifest);
     }
 }
 
-public class LowercaseEnumConverter<T>() : JsonStringEnumConverter<T>(JsonNamingPolicy.SnakeCaseLower) where T : struct, Enum;
 
 public class ApplicationBuilder
 {
