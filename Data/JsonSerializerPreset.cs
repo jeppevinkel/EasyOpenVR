@@ -7,7 +7,7 @@ namespace EasyOpenVR.Data;
 
 public static class JsonSerializerPreset
 {
-    public static readonly JsonSerializerOptions Options = new JsonSerializerOptions
+    public static JsonSerializerOptions Options => new JsonSerializerOptions
     {
         Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping, // To prevent ' to become \u0027
         IncludeFields = true, // Else the objects become empty due to the use of fields
@@ -18,7 +18,9 @@ public static class JsonSerializerPreset
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, // To simplify the output
         Converters =
         { // To ensure compatible values from enums
+            // VrManifest
             new LowercaseEnumConverter<LaunchTypeEnum>(),
+            // ActionManifest
             new LowercaseEnumConverter<ActionType>(),
             new LowercaseEnumConverter<ActionSetUsage>(),
             new LowercaseEnumConverter<ActionRequirement>(),

@@ -13,7 +13,7 @@ public class ActionManifest
     public List<DefaultBindings> DefaultBindings = [];
     public List<ActionItem> Actions = [];
     public List<ActionSet> ActionSets = [];
-    public List<Dictionary<string, string>> Localization = [];
+    public List<OrderedDictionary<string, string>> Localization = [];
 }
 
 ///  <a href="https://github.com/ValveSoftware/openvr/wiki/Action-manifest#default_bindings">Reference</a>
@@ -82,7 +82,6 @@ public enum ActionRequirement
     Optional
 }
 
-// TODO: Figure this out
 public enum ActionSkeleton
 {
     [JsonStringEnumMemberName("/skeleton/hand/left")]

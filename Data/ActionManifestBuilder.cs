@@ -59,9 +59,10 @@ public class ActionManifestBuilder
     /// <param name="languageTag"></param>
     /// <param name="prompts"></param>
     /// <returns></returns>
-    public ActionManifestBuilder AddLocalization(string languageTag, Dictionary<string, string> prompts)
+    public ActionManifestBuilder AddLocalization(string languageTag, OrderedDictionary<string, string> prompts)
     {
-        prompts["language_tag"] = languageTag;
+        prompts.Remove("language_tag"); // To avoid exception on duplicate key
+        prompts.Insert(0, "language_tag", languageTag); // To put this at the top
         _actionManifest.Localization.Add(prompts);
         return this;
     }

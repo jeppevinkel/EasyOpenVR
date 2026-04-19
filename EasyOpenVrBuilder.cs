@@ -1,4 +1,5 @@
 using EasyOpenVR.Data;
+using Software.Boll.EasyUtils;
 using Valve.VR;
 
 namespace EasyOpenVR;
@@ -9,7 +10,7 @@ namespace EasyOpenVR;
 public class EasyOpenVrBuilder
 {
     private EasyOpenVr.EasyOpenVrInitParams _initParams;
-    
+
     /**
      * Build an instance but do not initialize it.
      */
@@ -17,7 +18,7 @@ public class EasyOpenVrBuilder
     {
         return new EasyOpenVr(_initParams);
     }
-    
+
     /**
      * Build an instance and immediately initialize it.
      */
@@ -27,8 +28,9 @@ public class EasyOpenVrBuilder
         vr.InitWorkerThread();
         return vr;
     }
-    
+
     #region Setters
+
     /**
      * This will output debug information in the log output as well as the through the listener.
      */
@@ -47,7 +49,7 @@ public class EasyOpenVrBuilder
         _initParams.ApplicationType = appType;
         return this;
     }
-    
+
     /**
      * Will register the application to launch with the runtime.
      * Requires a VRAppManifest to have been registered, set the path using this builder.
@@ -59,21 +61,39 @@ public class EasyOpenVrBuilder
         _initParams.ForceAutoLaunch = force;
         return this;
     }
-    
-    /**
-     * The VR app manifest is required to register an application for auto launch.
-     */
-    public EasyOpenVrBuilder SetVrAppManifestPath(string path)
+
+    /// <summary>
+    /// The VR app manifest is required to register an application for auto launch and input.
+    /// </summary>
+    /// <param name="path">Cannot be used with <c>..</c>, has to be a file in the current folder or a subfolder thereof.</param>
+    /// <param name="vrManifest">Provide this to write the manifest to disk if it is missing.</param>
+    /// /// <param name="overwrite">Will overwrite an existing manifest.</param>
+    public EasyOpenVrBuilder SetVrAppManifest(string path, VrManifestBuilder? vrManifest = null, bool overwrite = false)
     {
+        if (vrManifest != null && (overwrite || !FileUtils.FileExists(path).FileExists))
+        {
+            var writeTextResult = FileUtils.WriteText(path, vrManifest.BuildAndSerialize().Json);
+            if (writeTextResult.Exception != null) throw writeTextResult.Exception;
+        }
+
         _initParams.VrAppManifestPath = path.Trim();
         return this;
     }
 
-    /**
-     * The action manifest is required for the application to listen to inputs.
-     */
-    public EasyOpenVrBuilder SetActionManifestPath(string path)
+    /// <summary>
+    /// The action manifest is required for the application to listen to inputs.
+    /// </summary>
+    /// <param name="path">Cannot be used with <c>..</c>, has to be a file in the current folder or a subfolder thereof.</param>
+    /// <param name="actionManifest">Provide this to write the manifest to disk if it is missing.</param>
+    /// <param name="overwrite">Will overwrite an existing manifest.</param>
+    public EasyOpenVrBuilder SetActionManifest(string path, ActionManifestBuilder? actionManifest = null, bool overwrite = false)
     {
+        if (actionManifest != null && (overwrite || !FileUtils.FileExists(path).FileExists))
+        {
+            var writeTextResult = FileUtils.WriteText(path, actionManifest.BuildAndSerialize().Json);
+            if (writeTextResult.Exception != null) throw writeTextResult.Exception;
+        }
+
         _initParams.ActionManifestPath = path.Trim();
         return this;
     }
@@ -98,12 +118,12 @@ public class EasyOpenVrBuilder
         _initParams.PumpValue = pumpValue;
         return this;
     }
-    
+
     public EasyOpenVrBuilder QuitWithRuntime()
     {
         _initParams.QuitWithRuntime = true;
         return this;
     }
-    
+
     #endregion
 }
