@@ -14,6 +14,8 @@ permissions:
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
+    env:
+      NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
 
     steps:
       - name: Checkout code
@@ -70,7 +72,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Push package to GitHub Packages
-        if: github.event_name == 'push'
         run: |
           dotnet nuget add source \
             --username ${{ github.actor }} \
@@ -81,5 +82,5 @@ jobs:
           dotnet nuget push ./nupkg/*.nupkg --source github --skip-duplicate
 
       - name: Push package to NuGet
-        if: github.event_name == 'release'
-        run: dotnet nuget push ./nupkg/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate
+        if: github.event_name == 'release' && env.NUGET_API_KEY != ''
+        run: dotnet nuget push ./nupkg/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ env.NUGET_API_KEY }} --skip-duplicate
