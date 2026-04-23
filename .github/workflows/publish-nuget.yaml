@@ -99,7 +99,7 @@ jobs:
           echo "### Links" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           if [ "${{ steps.upload-artifact.outcome }}" == "success" ]; then
-            echo "- [Artifact (this run)](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
+            echo "- [Artifact (this run)](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts)" >> $GITHUB_STEP_SUMMARY
           fi
           if [ "${{ steps.push-github.outcome }}" == "success" ]; then
             echo "- [GitHub Packages](https://github.com/${{ github.repository }}/pkgs/nuget/EasyOpenVR)" >> $GITHUB_STEP_SUMMARY
