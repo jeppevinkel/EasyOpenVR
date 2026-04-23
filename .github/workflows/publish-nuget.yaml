@@ -60,18 +60,21 @@ jobs:
         run: dotnet pack --configuration Release --no-build -o ./nupkg -p:Version=${{ steps.version.outputs.version }}
 
       - name: Upload package as artifact
+        id: upload-artifact
         uses: actions/upload-artifact@v7
         with:
           name: nuget-package
           path: ./nupkg/*.nupkg
 
       - name: Upload package to release
+        id: upload-release
         if: github.event_name == 'release'
         run: gh release upload ${{ github.event.release.tag_name }} ./nupkg/*.nupkg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Push package to GitHub Packages
+        id: push-github
         run: |
           dotnet nuget add source \
             --username ${{ github.actor }} \
@@ -82,5 +85,28 @@ jobs:
           dotnet nuget push ./nupkg/*.nupkg --source github --skip-duplicate
 
       - name: Push package to NuGet
+        id: push-nuget
         if: github.event_name == 'release' && env.NUGET_API_KEY != ''
         run: dotnet nuget push ./nupkg/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ env.NUGET_API_KEY }} --skip-duplicate
+
+      - name: Job summary
+        if: always()
+        run: |
+          echo "## NuGet Package" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** \`${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Links" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.upload-artifact.outcome }}" == "success" ]; then
+            echo "- [Artifact (this run)](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ "${{ steps.push-github.outcome }}" == "success" ]; then
+            echo "- [GitHub Packages](https://github.com/${{ github.repository }}/pkgs/nuget/EasyOpenVR)" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ "${{ steps.upload-release.outcome }}" == "success" ]; then
+            echo "- [GitHub Release](https://github.com/${{ github.repository }}/releases/tag/${{ github.event.release.tag_name }})" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ "${{ steps.push-nuget.outcome }}" == "success" ]; then
+            echo "- [NuGet.org](https://www.nuget.org/packages/EasyOpenVR/${{ steps.version.outputs.version }})" >> $GITHUB_STEP_SUMMARY
+          fi
