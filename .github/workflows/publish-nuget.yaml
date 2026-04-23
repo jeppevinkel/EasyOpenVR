@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: write
+  packages: write
 
 jobs:
   build-and-publish:
@@ -36,8 +37,25 @@ jobs:
       - name: Build the project
         run: dotnet build --configuration Release --no-restore
 
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "release" ]; then
+            VERSION="${{ github.event.release.tag_name }}"
+            VERSION="${VERSION#v}"
+          else
+            LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+            BASE_VERSION="${LATEST_TAG#v}"
+            MAJOR=$(echo $BASE_VERSION | cut -d. -f1)
+            MINOR=$(echo $BASE_VERSION | cut -d. -f2)
+            PATCH=$(echo $BASE_VERSION | cut -d. -f3)
+            NEXT_PATCH=$((PATCH + 1))
+            VERSION="${MAJOR}.${MINOR}.${NEXT_PATCH}-preview.${{ github.run_number }}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
       - name: Pack the project
-        run: dotnet pack --configuration Release --no-build -o ./nupkg
+        run: dotnet pack --configuration Release --no-build -o ./nupkg -p:Version=${{ steps.version.outputs.version }}
 
       - name: Upload package as artifact
         uses: actions/upload-artifact@v7
@@ -50,6 +68,17 @@ jobs:
         run: gh release upload ${{ github.event.release.tag_name }} ./nupkg/*.nupkg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push package to GitHub Packages
+        if: github.event_name == 'push'
+        run: |
+          dotnet nuget add source \
+            --username ${{ github.actor }} \
+            --password ${{ secrets.GITHUB_TOKEN }} \
+            --store-password-in-clear-text \
+            --name github \
+            "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+          dotnet nuget push ./nupkg/*.nupkg --source github --skip-duplicate
 
       - name: Push package to NuGet
         if: github.event_name == 'release'
