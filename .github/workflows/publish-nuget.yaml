@@ -1,0 +1,43 @@
+name: Build & Publish NuGet Package
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*.*.*'
+  release:
+    types: [created]
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+          cache: true
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build the project
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Pack the project
+        run: dotnet pack --configuration Release --no-build -o ./nupkg
+
+      - name: Upload package as artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: nuget-package
+          path: ./nupkg/*.nupkg
+
+      - name: Push package to NuGet
+        if: github.event_name == 'release' || startsWith(github.ref, 'refs/tags/v')
+        run: dotnet nuget push ./nupkg/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate
