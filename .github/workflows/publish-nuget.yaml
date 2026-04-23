@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - feature/add-release-pipeline
     tags:
       - 'v*.*.*'
   release:
