@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - feature/test-nuget-binaries
   release:
     types: [created]
 
